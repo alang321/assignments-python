@@ -47,19 +47,19 @@ def ceaser_cipher(txt, shift):
     return shifted_txt
 
 
-def calc_diff(freq_a, freq_b):
+def calc_diff(freq_a, freq_b, shift_a=0, shift_b=0):
     freq_diff = 0
-    for i in range(len(freq_a)):
-        freq_diff += abs(freq_a[i] - freq_b[i])
+    length = len(freq_a)
+    for i in range(length):
+        freq_diff += abs(freq_a[(i - shift_a) % length] - freq_b[(i - shift_b) % length])
     return freq_diff
 
 
 def find_shift(txt, freqs):
     freq_diffs = [0] * 26
+    freqs_txt = freq_from_txt(txt)
     for shift in range(26):
-        shifted_txt = ceaser_cipher(txt, shift)
-        freqs_txt = freq_from_txt(shifted_txt)
-        freq_diffs[shift] = calc_diff(freqs, freqs_txt)
+        freq_diffs[shift] = calc_diff(freqs, freqs_txt, 0, shift)
 
     return freq_diffs.index(min(freq_diffs))
 
