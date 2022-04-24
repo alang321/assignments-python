@@ -102,7 +102,7 @@ for fil_idx in range(len(file_paths)):
     deciphered_txt = ceaser_cipher(txt, optshift)
     string_to_file(deciphered_file_paths[fil_idx], deciphered_txt)
 
-    print("File:", file_paths[fil_idx], " Shiftkey:", optshift, " New File:", deciphered_file_paths[fil_idx])
+    print("File:", file_paths[fil_idx], " -  New File:", deciphered_file_paths[fil_idx], " -  Shiftkey:", optshift)
 
 input()
 
