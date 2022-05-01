@@ -1,7 +1,7 @@
 import math
 import matplotlib.pyplot as plt
 
-correct_method = True
+correct_method = False
 
 def unimpeded_growth(r, start_year=2005, end_year=2100):
     tao = 1 / math.log(1 + r)
@@ -96,9 +96,10 @@ else:
     r = [0.044, 0.034, 0.034, 0.034]
 
 t_range, growth_fac_unimp = unimpeded_growth(0.044)
-t_range, combined_growth_fac_ev = evolutionary_growth(r, distribution)
-t_range, combined_growth_fac_rev = revolutionary_growth(emission_red, revolution_year, r, distribution, lifetime)
+_, combined_growth_fac_ev = evolutionary_growth(r, distribution)
+_, combined_growth_fac_rev = revolutionary_growth(emission_red, revolution_year, r, distribution, lifetime)
 
+print("Growth Factor (2100): ", combined_growth_fac_rev[-1])
 plt.figure()
 plt.plot(t_range, growth_fac_unimp, label='Unimpeded growth', color="red")
 plt.plot(t_range, combined_growth_fac_ev, label='Evolutionary', color="green")
@@ -108,7 +109,6 @@ plt.xlabel("Year")
 plt.ylabel("Growth factor")
 plt.legend()
 plt.show()
-print("Growth Factor (2100): ", combined_growth_fac_rev[-1])
 
 
 # step 4
@@ -148,7 +148,10 @@ while True:
 
         if a == len(variable_names):
             for i in range(len(variable_names)):
-                variables[i] = variables_def_vals[i].copy()
+                if type(variables[i]) == list:
+                    variables[i] = variables_def_vals[i].copy()
+                else:
+                    variables[i] = variables_def_vals[i]
     except:
         break
 
@@ -180,7 +183,7 @@ while True:
 
         _, combined_growth_fac_rev_old = revolutionary_growth(emission_red_def, revolution_year_def, r_eff_def, distribution, lifetime_def)
         t_range, combined_growth_fac_rev_new = revolutionary_growth(emission_red, revolution_year, r_eff, distribution, lifetime)
-        print("Growth Factor (2100): ", combined_growth_fac_rev[-1])
+        print("\nGrowth Factor (2100): ", combined_growth_fac_rev[-1])
 
         plt.figure()
         plt.plot(t_range, combined_growth_fac_rev_old, label='Original', color="blue")
