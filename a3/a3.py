@@ -38,26 +38,22 @@ def revolutionary_growth(emission_reduction_list, revolution_year_list, r_list, 
     growth_factor_list = [[0] * len(t_range) for _ in r_list]
 
     for category in range(len(r_list)):
-        n_replace_sum = 0
-        n_introduced = 0
+        n_replaced = 0
         for t, year in enumerate(t_range):
-            if year == revolution_year_list[category]:
-                n_introduced = math.exp(t / tao[category])
-            n_total = math.exp(t / tao[category])
-            n_conv = max(0, n_introduced - n_replace_sum)
-            n_ng = n_total - n_conv
-
-            if year <= revolution_year_list[category]:
-                growth_factor_list[category][t] = n_total
+            if year > revolution_year_list[category]:
+                n_total = math.exp(t / tao[category])
+                n_conv = max(growth_factor_list[category][t_range.index(revolution_year_list[category])] - n_replaced, 0)
+                n_ng = n_total - n_conv
+                growth_factor_list[category][t] = n_conv + (1-emission_reduction_list[category]) * n_ng
             else:
-                growth_factor_list[category][t] = n_conv + n_ng * (1 - emission_reduction_list[category])
+                growth_factor_list[category][t] = math.exp(t / tao[category])
 
             if year >= revolution_year_list[category]:
-                n_replace_sum += n_replace(t, t_L, tao[category])
-                growth_factor_list[category][t] = n_conv + n_ng * (1 - emission_reduction_list[category])
+                n_replaced += n_replace(t, t_L, tao[category])
+
 
             if year == 2050:
-                print(n_ng)
+                print(n_ng * market_share_list[category])
 
     combined_growth_fac = [0] * len(t_range)
     for t in range(len(t_range)):
