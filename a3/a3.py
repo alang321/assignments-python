@@ -38,16 +38,26 @@ def revolutionary_growth(emission_reduction_list, revolution_year_list, r_list, 
     growth_factor_list = [[0] * len(t_range) for _ in r_list]
 
     for category in range(len(r_list)):
-        n_ng = 0
+        n_replace_sum = 0
+        n_introduced = 0
         for t, year in enumerate(t_range):
-            if year > revolution_year_list[category]:
-                n_total = math.exp(t / tao[category])
-                n_ng += n_new(t, t_L, tao[category])
-                n_ng = min(n_total, n_ng)
-                n_conv = n_total - n_ng
-                growth_factor_list[category][t] = n_conv + n_ng * (1 - emission_reduction_list[category])
+            if year == revolution_year_list[category]:
+                n_introduced = math.exp(t / tao[category])
+            n_total = math.exp(t / tao[category])
+            n_conv = max(0, n_introduced - n_replace_sum)
+            n_ng = n_total - n_conv
+
+            if year <= revolution_year_list[category]:
+                growth_factor_list[category][t] = n_total
             else:
-                growth_factor_list[category][t] = math.exp(t / tao[category])
+                growth_factor_list[category][t] = n_conv + n_ng * (1 - emission_reduction_list[category])
+
+            if year >= revolution_year_list[category]:
+                n_replace_sum += n_replace(t, t_L, tao[category])
+                growth_factor_list[category][t] = n_conv + n_ng * (1 - emission_reduction_list[category])
+
+            if year == 2050:
+                print(n_ng)
 
     combined_growth_fac = [0] * len(t_range)
     for t in range(len(t_range)):
@@ -56,9 +66,9 @@ def revolutionary_growth(emission_reduction_list, revolution_year_list, r_list, 
 
     return t_range, combined_growth_fac
 
-def n_new(t, t_L, tao, order=4):
+def n_replace(t, t_L, tao, order=4):
     expansion = 0
-    for i in range(order):
+    for i in range(1, order + 1):
         expansion += math.exp(-i * t_L / tao)
 
     return (1 - math.exp(-1/tao)) * math.exp(t/tao) * expansion
