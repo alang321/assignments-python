@@ -1,4 +1,5 @@
 import pygame as pg
+import math
 
 pg.init()
 
@@ -14,12 +15,13 @@ reso = (scr_width, scr_height)
 scr = pg.display.set_mode(reso)
 
 paddle_pos = [scr_width / 2, scr_height - 20]
-paddle_vel = 150 # pixels per sec
-paddle_lim = [50, scr_width - 50]
-paddle_rect = pg.Rect(0, 0, 50, 6)
+paddle_vel = 250 # pixels per sec
+paddle_lim = [25, scr_width - 25]
+paddle_width = 50
+paddle_rect = pg.Rect(0, 0, paddle_width, 6)
 
 ball_pos = [scr_width/2 + 30, scr_height/2]
-ball_vel = [300, 300]
+ball_vel = [200, 200]
 ball_rad = 4
 ball_surface = pg.Surface((ball_rad * 2, ball_rad * 2))
 pg.draw.circle(ball_surface, BALL_COLOR, (ball_rad, ball_rad), ball_rad)
@@ -40,7 +42,7 @@ for row_idx in range(len(grid_rects)):
     for col_idx in range(len(grid_rects[row_idx])):
         pos_y = grid_margin_t + row_idx * grid_elem_h
         pos_x = col_idx * (grid_elem_w)
-        grid_rects[row_idx][col_idx] = pg.Rect(pos_x, pos_y, grid_elem_w, grid_elem_h)
+        grid_rects[row_idx][col_idx] = pg.Rect(pos_x, pos_y, grid_elem_w, grid_elem_h)    
 
 tick_0 = 0.001 * pg.time.get_ticks()
 escape = False
@@ -61,6 +63,8 @@ while not escape:
             escape = True
 
     # update paddle pos
+    paddle_rect.centerx = paddle_pos[0]
+    paddle_rect.centery = paddle_pos[1]
     if left and not right:
         paddle_pos[0] = max(paddle_lim[0], paddle_pos[0] - paddle_vel * dt)
     elif right and not left:
@@ -81,24 +85,66 @@ while not escape:
         ball_pos[0] = intrusion_depth + ball_rad + 1
     #top bottom
     if ball_pos[1] + ball_rad >= scr_height:
-        intrusion_depth = scr_height - ball_pos[1] - ball_rad
-        ball_vel[1] = -ball_vel[1]
-        ball_pos[1] = scr_height - intrusion_depth - ball_rad - 1
+        break
     if ball_pos[1] - ball_rad <= 0:
         intrusion_depth = ball_pos[1] - ball_rad
         ball_vel[1] = - ball_vel[1]
         ball_pos[1] = intrusion_depth + ball_rad + 1
     #grid
-
-
-
-    # draw
-    paddle_rect.centerx = paddle_pos[0]
-    paddle_rect.centery = paddle_pos[1]
+    bounced = False
     ball_rect.centerx = ball_pos[0]
     ball_rect.centery = ball_pos[1]
+    for row_idx, row_elements in enumerate(grid_rects):
+        for col_idx, grid_rect in enumerate(row_elements):
+            if grid_hitpoints[row_idx][col_idx] != 0:
+                if ball_rect.colliderect(grid_rect):
+                    grid_hitpoints[row_idx][col_idx] -= 1
+                    
+                    if ball_vel[1] > 0:
+                        vert_dist = grid_rect.top - ball_rect.bottom
+                    else:
+                        vert_dist = grid_rect.bottom - ball_rect.top
+                        
+                    if ball_vel[0] > 0:
+                        hor_dist = grid_rect.left - ball_rect.right
+                    else:
+                        hor_dist = grid_rect.right - ball_rect.left
+                    
+                    if abs(hor_dist) > abs(vert_dist):
+                        ball_vel[1] = - ball_vel[1]
+                        ball_pos[1] = ball_pos[1] + vert_dist + 1
+                        bounced = True
+                        break
+                    else:
+                        ball_vel[0] = - ball_vel[0]
+                        ball_pos[0] = ball_pos[0] + hor_dist + 1
+                        bounced = True
+                        break
+        if bounced:
+            break
+    # paddle collide
+    maxangle = 35
+    if ball_rect.colliderect(paddle_rect):
+        hor_dist = ball_pos[0] - paddle_rect.centerx
+        dist_from_cent = hor_dist / paddle_width * 2
+        
+        ang = min(max(dist_from_cent, -1), 1) * math.radians(maxangle)
+        n_0 = [0, -1]
+        n = [0, 0]
+        n[0] = math.cos(ang)*n_0[0] - math.sin(ang)*n_0[1]
+        n[1] = math.sin(ang)*n_0[0] + math.cos(ang)*n_0[1]
+        print(n[0]**2 + n[1]**2)
+        dot_prod = ball_vel[0] * n[0] + ball_vel[1] * n[1]
+        
+        for i in range(2):
+            ball_vel[i] = ball_vel[i]-2 * dot_prod * n[i]
+            
+        for i in range(2):
+            ball_pos[i] += ball_vel[i] * dt * 1.3
+        
+    # draw
     scr.fill(SCR_COLOR)
-    scr.blit(ball_surface)
+    scr.blit(ball_surface, (ball_pos[0] - ball_rad, ball_pos[1] - ball_rad))
     pg.draw.rect(scr, PADDLE_COLOR, paddle_rect)
 
     # draw grid
@@ -113,3 +159,5 @@ while not escape:
 
     #time keeping, max framerate of 60, otherwise game is slowed down
     dt = min(clock.tick(60)/1000, 0.1)
+
+pg.quit()
