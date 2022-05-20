@@ -2,6 +2,10 @@ import view # file with your otwv drawing functions
 import pygame as pg
 import math
 import isa
+
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
 # Size of window
 xmax = 1000 #[pixels] window width (= x-coordinate runs of right side right+1)
 ymax = 700 #[pixels] window height(= y-coordinate of lower side of window+1)
@@ -17,7 +21,7 @@ scr = view.openwindow(xmax, ymax)
 running = True
 
 gamma = -3 # deg
-alpha = -5 # deg
+alpha = 3 # deg
 V = 113.178 # m/s
 x = -3000 # m
 y = 2000 # m
@@ -36,7 +40,12 @@ flapsdot = 0.2 # [1/s] flap deflection speed
 alphamin = -10.0 # [deg]
 alphamax = 20.0 # [deg]
 
+dflaps = 0
+dgear = 0
+dbrake = 0
+dthrottle = 0
 
+displaytext = 0
 
 clock = pg.time.Clock()
 dt = 0
@@ -44,25 +53,37 @@ while running:
     # Clear screen scr
     view.clr(scr)
     # Get user inputs by processing events
-    dalpha, dthrottle, dflaps, gearpressed, brakepressed, userquit = view.processevents()
+    change_alpha, change_throttle, change_flaps, gearpressed, brakepressed, userquit = view.processevents()
 
-    theta = alpha + gamma
-    v_x = V * math.cos(math.radians(gamma))
-    v_y = V * math.sin(math.radians(gamma))
-    V = (v_x**3 + v_y**3)**0.5
-
-    x += v_x * dt
-    y += v_y * dt
-    Temp, p, rho = isa.getIsa(y)
+    alpha = clamp(alpha + dt * alphadot * change_alpha, alphamin, alphamax)
+    dflaps = clamp(dflaps + dt * flapsdot * change_flaps, 0, 1)
+    dthrottle = clamp(dthrottle + dt * throttledot * change_throttle, 0, 1)
 
     cl, cd = view.CLCD(alpha, dflaps, dgear, dbrake)
     L = cl * 0.5 * rho * V**2 * S
     D = cd * 0.5 * rho * V**2 * S
     T = dthrottle * Tmax
     m_dot_fuel = -CT * T
+    mfuel -= m_dot_fuel
+    m = mzerofuel + mfuel
     W = m * g
 
-    if x >= 0:
+    dvdt = (T*math.cos(math.radians(alpha)) - D - W * math.sin(math.radians(gamma)))/m
+    dgdt = (T*math.sin(math.radians(alpha)) + L - W * math.cos(math.radians(gamma)))/m/V
+
+    V = V + dvdt * dt
+    gamma = gamma + dgdt * dt
+
+    theta = alpha + gamma
+    v_x = V * math.cos(math.radians(gamma))
+    v_y = V * math.sin(math.radians(gamma))
+
+    x += v_x * dt
+    y += v_y * dt
+    Temp, p, rho = isa.getIsa(y)
+
+    if x >= 0 or y < 0:
+        print("x:", x, "y:", y)
         break
 
     # Draw horizon on scr, using pitch angle theta, and screen dimensions
@@ -70,8 +91,14 @@ while running:
     view.drawrunway(scr, theta, x, y, xmax, ymax, minazi, maxazi, minelev, maxelev)
     # Update screen
     view.flip()
+
+    displaytext += dt
+    if displaytext > 0.5:
+        displaytext = 0
+        print(dthrottle, alpha, dflaps, x, y)
     pg.event.pump()
     if userquit:
+        print("userquit")
         running = False
 
     dt = min(clock.tick(60) / 1000, 0.1)
