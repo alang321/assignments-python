@@ -1,12 +1,15 @@
+import math
+
 import pygame as pg
 # Colours
 white = (255, 255, 255)
 black = (0, 0, 0)
 red = (255, 0, 0)
+
 def openwindow(xmax, ymax):
     """ Init pygame, set up window, return scr (window Surface) """
-    reso = (xmax, scr_height)
-    scr = pg.display.ymax(reso)
+    reso = (xmax, ymax)
+    scr = pg.display.set_mode(reso)
     return scr
 
 def processevents():
@@ -50,7 +53,7 @@ def processevents():
 
 def clr(scr):
     """Clears surface, fill with black"""
-    scr.fill(black)
+    scr.fill(white)
     return
 
 
@@ -80,5 +83,32 @@ def azi2x(azi, xmax, minazi, maxazi):
 
 def drawhor(scr, theta, xmax, ymax, minelev, maxelev):
     """Draw horizon for pitch angle theta[deg]"""
-    y = elev2y(ele)
+    theta *= -1
+    theta = min(max(theta, minelev), maxelev)
+    y = elev2y(theta, ymax, minelev, maxelev)
+
+    pg.draw.line(scr, black, (0, y), (xmax, y))
     return
+
+def drawrunway(scr, theta, x, y, xmax, ymax, minazi, maxazi, minelev, maxelev):
+    w = 60
+    l = 3000
+    dist0 = (y**2 + x**2)**0.5
+    dist1 = (y**2 + (abs(x) + l)**2)**0.5
+    dazi0 = max(min(math.degrees(math.atan(1/2*w/dist0)), maxazi), minazi)
+    dazi1 = max(min(math.degrees(math.atan(1/2*w/dist1)), maxazi), minazi)
+    elev0 = -theta - math.atan(y/-x)
+    elev1 = -theta - math.atan(y/(-x + l))
+    xc = azi2x(0, xmax, minazi, maxazi)
+    y0 = elev2y(elev0, ymax, minelev, maxelev)
+    y1 = elev2y(elev1, ymax, minelev, maxelev)
+    dx0 = xmax * dazi0/(maxazi-minazi)
+    dx1 = xmax * dazi1/(maxazi-minazi)
+    A = (xc - dx0, y0)
+    B = (xc + dx0, y0)
+    C = (xc + dx1, y1)
+    D = (xc - dx1, y1)
+    pg.draw.line(scr, black, A, B)
+    pg.draw.line(scr, black, B, C)
+    pg.draw.line(scr, black, C, D)
+    pg.draw.line(scr, black, D, A)
