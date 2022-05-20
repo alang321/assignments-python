@@ -112,3 +112,10 @@ def drawrunway(scr, theta, x, y, xmax, ymax, minazi, maxazi, minelev, maxelev):
     pg.draw.line(scr, black, B, C)
     pg.draw.line(scr, black, C, D)
     pg.draw.line(scr, black, D, A)
+
+def CLCD(alpha, dflaps, dgear, dbrake):
+    clmax = 1.5 + 1.4* dflaps
+    CL = min(0.1 * (alpha + 3) + dflaps, clmax)
+    cd0 = 0.021 + 0.020 * dgear + 0.120 * dflaps + 0.4 * dbrake
+    CD = cd0+ 0.0365 * CL**2
+    return CL, CD
