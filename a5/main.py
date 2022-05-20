@@ -24,7 +24,7 @@ gamma = -3 # deg
 alpha = 3 # deg
 V = 113.178 # m/s
 x = -3000 # m
-y = 2000 # m
+y = 200 # m
 
 # Model parameters
 mzerofuel = 40000.0 #[kg] mass aircraft + payload excl fuel
