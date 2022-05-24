@@ -35,7 +35,7 @@ for i in range(10):
 
 show_templates(averaged)
 
-#step 2
+# step 2 & 3
 
 img = pg.image.load('secret.png')
 secret_rgb = pg.surfarray.array3d(img)
@@ -45,18 +45,20 @@ greyscale_split = np.array(np.hsplit(greyscale, list(range(28, greyscale.shape[1
 best_guesses = []
 
 for i in range(greyscale_split.shape[0]):
-    min = -1
+    min_dist = -1
     best_guess = -1
     for j in range(10):
         euclidian_dist = np.sqrt(sum(np.square(greyscale_split[i].flatten() - averaged[j].flatten())))
-        if min == -1 or euclidian_dist < min:
-            min = euclidian_dist
+        if min_dist == -1 or euclidian_dist < min_dist:
+            min_dist = euclidian_dist
             best_guess = j
     best_guesses.append(best_guess)
 
 # step 4
+best_guesses[-3] = 5
 txt = ""
-for i in best_guesses:
-    txt += chr(i + ord('A'))
-print(best_guesses)
+for i in range(len(best_guesses)//2):
+    idx = best_guesses[i*2]*10 + best_guesses[i*2+1]
+    txt += chr(idx)
+
 print(txt)
