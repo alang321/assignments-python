@@ -22,16 +22,11 @@ file.close()
 images = MNIST[0]
 labels = MNIST[1]
 shape_image = images[0].shape
-# show a single number image plus label:
-plt.figure()
-plt.imshow(images[0], cmap=plt.get_cmap('gray'))
-plt.title(labels[0])
-plt.show()
 
 # step 1
-averaged = np.zeros((9, 28, 28))
+averaged = np.zeros((10, 28, 28))
 
-for i in range(9):
+for i in range(10):
     ii = np.where(labels == i)[0]
     count = ii.size
     for j in ii:
@@ -44,8 +39,24 @@ show_templates(averaged)
 
 img = pg.image.load('secret.png')
 secret_rgb = pg.surfarray.array3d(img)
-greyscale = np.zeros(secret_rgb.shape[0:2])
-# [0.216, 0.587, 0.144]
-print()
-greyscale = np.dot
-print(pg.surfarray.array3d(img))
+greyscale = np.mean(secret_rgb, axis=2).transpose()
+greyscale_split = np.array(np.hsplit(greyscale, list(range(28, greyscale.shape[1], 28))))
+
+best_guesses = []
+
+for i in range(greyscale_split.shape[0]):
+    min = -1
+    best_guess = -1
+    for j in range(10):
+        euclidian_dist = np.sqrt(sum(np.square(greyscale_split[i].flatten() - averaged[j].flatten())))
+        if min == -1 or euclidian_dist < min:
+            min = euclidian_dist
+            best_guess = j
+    best_guesses.append(best_guess)
+
+# step 4
+txt = ""
+for i in best_guesses:
+    txt += chr(i + ord('A'))
+print(best_guesses)
+print(txt)
