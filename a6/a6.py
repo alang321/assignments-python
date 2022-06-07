@@ -55,7 +55,7 @@ for i in range(greyscale_split.shape[0]):
     best_guesses.append(best_guess)
 
 # step 4
-best_guesses[-3] = 5
+#best_guesses[-3] = 5
 txt = ""
 for i in range(len(best_guesses)//2):
     idx = best_guesses[i*2]*10 + best_guesses[i*2+1]

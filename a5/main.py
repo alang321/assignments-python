@@ -101,7 +101,7 @@ while running:
         print("userquit")
         running = False
 
-    dt = min(clock.tick(60) / 1000, 0.1)
+    dt = clock.tick(120) / 1000
 
 # Close window
 view.closewindow()
